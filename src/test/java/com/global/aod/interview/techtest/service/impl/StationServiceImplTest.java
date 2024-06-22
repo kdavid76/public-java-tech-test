@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -96,5 +97,52 @@ class StationServiceImplTest {
 
         var response = impl.findById(1L);
         assertThat(response).isNotNull().isEqualTo(station);
+    }
+
+    @Test
+    @DisplayName("updateStation - Throw ResponseStatusException when cannot save station")
+    void shouldThrowExceptionWhenUpdateFails() {
+        var station = Station.builder().stationName(STATION_NAME).build();
+        var stationEntity = new StationEntity(1L, STATION_NAME, 0);
+
+        when(mockMapper.toEntity(station)).thenReturn(stationEntity);
+        when(mockRepository.save(stationEntity)).thenThrow(new IllegalArgumentException("There is trouble here!"));
+
+        assertThatThrownBy(() -> impl.updateStation(station))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
+
+        verifyNoMoreInteractions(mockMapper);
+    }
+
+    @Test
+    @DisplayName("updateStation - Optimistic locking failure when cannot save station")
+    void shouldThrowOptimisticLockingFailureWhenUpdateFails() {
+        var station = Station.builder().stationName(STATION_NAME).build();
+        var stationEntity = new StationEntity(1L, STATION_NAME, 0);
+
+        when(mockMapper.toEntity(station)).thenReturn(stationEntity);
+        when(mockRepository.save(stationEntity)).thenThrow(new OptimisticLockingFailureException("There is trouble here!"));
+
+        assertThatThrownBy(() -> impl.updateStation(station))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasCauseInstanceOf(OptimisticLockingFailureException.class);
+
+        verifyNoMoreInteractions(mockMapper);
+    }
+
+    @Test
+    @DisplayName("updateStation - Station successfully saved.")
+    void shouldSuccessfullyUpdateStation() {
+        var station = Station.builder().stationName(STATION_NAME).build();
+        var stationEntity = new StationEntity(1L, STATION_NAME, 0);
+        var responseStation = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
+
+        when(mockMapper.toEntity(station)).thenReturn(stationEntity);
+        when(mockRepository.save(stationEntity)).thenReturn(stationEntity);
+        when(mockMapper.toDto(stationEntity)).thenReturn(responseStation);
+
+        var response = impl.updateStation(station);
+        assertThat(response).isNotNull().isEqualTo(responseStation);
     }
 }

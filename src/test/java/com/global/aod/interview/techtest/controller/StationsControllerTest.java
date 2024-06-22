@@ -126,4 +126,37 @@ class StationsControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("UpdateStation - Input validation is failing")
+    void shouldFailValidationWhenUpdatingStation() throws Exception {
+        var payload = Station.builder().build();
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .put("/stations")
+                        .content(asJsonString(payload))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(stationService);
+    }
+
+    @Test
+    @DisplayName("UpdateStation - Success")
+    void shouldUpdateStation() throws Exception {
+        var payload = Station.builder().stationName(STATION_NAME).build();
+        var response = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
+
+        when(stationService.updateStation(any(Station.class))).thenReturn(response);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .put("/stations")
+                        .content(asJsonString(payload))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.stationName").value(STATION_NAME));
+    }
 }

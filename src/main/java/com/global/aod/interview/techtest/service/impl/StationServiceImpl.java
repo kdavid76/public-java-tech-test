@@ -6,6 +6,7 @@ import com.global.aod.interview.techtest.repository.StationRepository;
 import com.global.aod.interview.techtest.service.StationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,5 +53,24 @@ public class StationServiceImpl implements StationService {
         log.info("Getting station data with id={}", id);
         var entity = repository.findById(id);
         return mapper.toDto(entity.orElse(null));
+    }
+
+    @Override
+    @Transactional
+    public Station updateStation(Station station) {
+        log.info("Updating station with data={}", station);
+
+        var entity = mapper.toEntity(station);
+
+        try {
+            var responseEntity = repository.save(entity);
+            return mapper.toDto(responseEntity);
+        } catch (OptimisticLockingFailureException e) {
+            log.error("Version mismatch while updating station.", e);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "", e);
+        } catch (Exception e) {
+            log.error("Unexpected error while persisting Station to database.", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "", e);
+        }
     }
 }

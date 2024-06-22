@@ -11,4 +11,6 @@ public interface StationService {
     List<Station> findAllStations();
 
     Station findById(Long id);
+
+    Station updateStation(Station station);
 }
