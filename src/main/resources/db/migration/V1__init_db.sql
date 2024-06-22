@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS station
 (
-    id   SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
+    id      SERIAL PRIMARY KEY,
+    name    TEXT NOT NULL,
+    version INTEGER NOT NULL DEFAULT 0
 )

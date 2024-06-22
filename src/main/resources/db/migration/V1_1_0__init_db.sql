@@ -1,0 +1,1 @@
+CREATE SEQUENCE IF NOT EXISTS station_entity_seq
