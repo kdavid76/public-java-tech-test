@@ -32,14 +32,9 @@ public class StationServiceImpl implements StationService {
         log.info("Creating station name={}", station.stationName());
 
         var entity = mapper.toEntity(station);
+        var responseEntity = repository.save(entity);
 
-        try {
-            var responseEntity = repository.save(entity);
-            return mapper.toDto(responseEntity);
-        } catch (Exception e) {
-            log.error("Unexpected error while persisting Station to database.", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "", e);
-        }
+        return mapper.toDto(responseEntity);
     }
 
     @Override
@@ -58,6 +53,10 @@ public class StationServiceImpl implements StationService {
     @Override
     @Transactional
     public Station updateStation(Station station) {
+        /*
+        This method is only called with validated input. So, a valid stationName is guaranteed.
+        If the automatic bean validation is not an option anymore, then we need to test/validate the input here.
+         */
         log.info("Updating station with data={}", station);
 
         var entity = mapper.toEntity(station);
@@ -68,9 +67,12 @@ public class StationServiceImpl implements StationService {
         } catch (OptimisticLockingFailureException e) {
             log.error("Version mismatch while updating station.", e);
             throw new ResponseStatusException(HttpStatus.CONFLICT, "", e);
-        } catch (Exception e) {
-            log.error("Unexpected error while persisting Station to database.", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "", e);
         }
+    }
+
+    @Override
+    public void deleteStation(Long id) {
+        log.info("Deleting station with id={}", id);
+        repository.deleteById(id);
     }
 }

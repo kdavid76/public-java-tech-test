@@ -75,8 +75,7 @@ Security is kind of a natural choice for authorisation.
 ### Retrieving the list of all stations
 
 The list of all stations can be retrieved by sending a `GET` request to the URI: `/stations`. The successful response
-will look
-like this and will have http status `OK(200)`:
+will look like this, and will have http status `OK(200)`:
 
 ```
 [
@@ -100,8 +99,8 @@ like this and will have http status `OK(200)`:
 
 When the background service fails, then `INTERNAL_SERVER_ERROR(500)` will be returned.
 
-If you call this endpoint before any station data is persisted, the http status still will be `OK(200)` but the response
-payload will be empty.
+If you call this endpoint before any station data is persisted, then the response still will be `OK(200)`
+and the payload will be empty.
 
 ### Retrieving data for a selected station
 
@@ -152,8 +151,9 @@ optimistic locking scenario is implemented. And that's why I have added the `ver
 
 ### Delete a selected station
 
-, it must be and only one process can change that. it is possibly read quite often. So for this example and the given
-database structure it does not require
+A selected station can be deleted by sending a `DELETE` request to `/stations/{id}` where the `{id}` part is
+the identifier of the station. If the backend service finishes in an exceptional scenario, the response will
+be `INTERNA_SERVER_ERROR(500)`, otherwise the response is always `NO_CONTENT(204)`.
 
 ## Overview
 

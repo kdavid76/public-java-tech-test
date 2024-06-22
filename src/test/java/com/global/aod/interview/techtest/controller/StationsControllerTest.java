@@ -159,4 +159,12 @@ class StationsControllerTest {
                 .andExpect(jsonPath("$.id").value("1"))
                 .andExpect(jsonPath("$.stationName").value(STATION_NAME));
     }
+
+    @Test
+    @DisplayName("DeleteStation - Success")
+    void shouldDeleteStation() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders
+                        .delete("/stations/1"))
+                .andExpect(status().isNoContent());
+    }
 }

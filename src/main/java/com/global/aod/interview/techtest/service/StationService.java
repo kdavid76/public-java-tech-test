@@ -13,4 +13,6 @@ public interface StationService {
     Station findById(Long id);
 
     Station updateStation(Station station);
+
+    void deleteStation(Long id);
 }
