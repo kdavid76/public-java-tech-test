@@ -2,14 +2,17 @@ package com.global.aod.interview.techtest.contoller;
 
 import com.global.aod.interview.techtest.model.Station;
 import com.global.aod.interview.techtest.service.StationService;
+import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +52,23 @@ public class StationsController {
 
     @GetMapping("")
     public ResponseEntity<List<Station>> findAllStations() {
-        return ResponseEntity.ok(stationService.findAllStations());
+        var listOfStations = stationService.findAllStations();
+
+        if (CollectionUtils.isEmpty(listOfStations)) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(listOfStations);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Station> findById(@Nonnull @PathVariable Long id) {
+        var station = stationService.findById(id);
+
+        if (station == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(station);
     }
 }

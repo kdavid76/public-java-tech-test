@@ -79,6 +79,37 @@ will look
 like this and will have http status `OK(200)`:
 
 ```
+[
+    {
+        "id": 2,
+        "stationName": "Heart UK",
+        "version": 0
+    },
+    {
+        "id": 3,
+        "stationName": "Heart UK",
+        "version": 0
+    },
+    {
+        "id": 4,
+        "stationName": "Heart UK",
+        "version": 0
+    }
+]
+```
+
+When the background service fails, then `INTERNAL_SERVER_ERROR(500)` will be returned.
+
+If you call this endpoint before any station data is persisted, the http status still will be `OK(200)` but the response
+payload will be empty.
+
+### Retrieving data for a selected station
+
+The data of a selected station can be retrieved by sending a `GET` request to `/stations/{id}` where the `{id}` part is
+the identifier of the station. If it can be found then it will be returned alongside an http `OK(200)` response in this
+format:
+
+```
 {
     "id": 6,
     "stationName": "Heart UK",
@@ -86,16 +117,40 @@ like this and will have http status `OK(200)`:
 }
 ```
 
-If the request is not successful, the background service fails, then `INTERNAL_SERVER_ERROR(500)` will be returned.
+If the background service fails http `INTERNAL_SERVER_ERROR(500)` will be returned. The station identifier is a `Long`.
+If you try it with something what is not a number, then http status `BAD_REQUEST(400)` will be the result.
 
-If you call this endpoint before any station data is persisted, the http status still will be `OK(200)` but the response
-payload will be empty.
+### Modify station data
 
-### Reading station data
+Amending station data is very similar to creating new stations. A `PUT` request needs to be sent to `/stations`
+endpoint with the payload of
 
-In a real/live environment, the parameters of a radio station aren't changing really frequently. But when they are
+```
+{
+    "id": 6,
+    "stationName": "Capital London",
+    "version": 0
+}
+```
+
+In case of successful modification of the data, http status `OK(200)` will be returned. If the backed service fails
+http `INTERNAL_SERVER_ERROR(500)`. If the station with the given identifier does not exists, it will be created. Every
+time when the operation is successful, the response will have a payload of:
+
+```
+{
+    "id": 6,
+    "stationName": "Capital London",
+    "version": 1
+}
+```
+
+Which shows that the attribute version is incremented by the framework automatically. In a real/live environment, the
+parameters of a radio station aren't changing really frequently. But when they are
 changing we need to make sure only one client can write it at the same time. For demonstrating this, a very simple
-optimistic locking scenario is implemented. And I've added a new row to the database table
+optimistic locking scenario is implemented. And that's why I have added the `version` column to the database.
+
+### Delete a selected station
 
 , it must be and only one process can change that. it is possibly read quite often. So for this example and the given
 database structure it does not require

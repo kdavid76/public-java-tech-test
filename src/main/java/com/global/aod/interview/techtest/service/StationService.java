@@ -9,4 +9,6 @@ public interface StationService {
     Station createStation(Station station);
 
     List<Station> findAllStations();
+
+    Station findById(Long id);
 }

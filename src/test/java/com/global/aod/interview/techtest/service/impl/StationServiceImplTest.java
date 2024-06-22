@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -82,5 +83,18 @@ class StationServiceImplTest {
 
         var response = impl.findAllStations();
         assertThat(response).isNotNull().hasSize(3);
+    }
+
+    @Test
+    @DisplayName("findById - The station waas found")
+    void shouldReturnStation() {
+        var station = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
+        var stationEntity = new StationEntity(1L, STATION_NAME, 0);
+
+        when(mockRepository.findById(1L)).thenReturn(Optional.of(stationEntity));
+        when(mockMapper.toDto(stationEntity)).thenReturn(station);
+
+        var response = impl.findById(1L);
+        assertThat(response).isNotNull().isEqualTo(station);
     }
 }

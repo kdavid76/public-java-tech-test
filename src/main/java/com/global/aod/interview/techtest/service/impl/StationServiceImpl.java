@@ -46,4 +46,11 @@ public class StationServiceImpl implements StationService {
         log.info("Getting all Stations...");
         return repository.findAll().stream().map(mapper::toDto).toList();
     }
+
+    @Override
+    public Station findById(Long id) {
+        log.info("Getting station data with id={}", id);
+        var entity = repository.findById(id);
+        return mapper.toDto(entity.orElse(null));
+    }
 }

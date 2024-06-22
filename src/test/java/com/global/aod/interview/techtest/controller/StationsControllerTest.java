@@ -89,7 +89,7 @@ class StationsControllerTest {
     }
 
     @Test
-    @DisplayName("FindAllStations - Reply empty list when no stations pesisted")
+    @DisplayName("FindAllStations - No content when no stations has been persisted")
     void shouldReturnEmptyListOfStations() throws Exception {
 
         when(stationService.findAllStations()).thenReturn(List.of());
@@ -97,7 +97,33 @@ class StationsControllerTest {
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/stations")
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("FindById - Station found")
+    void shouldReturnAStation() throws Exception {
+        var station = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
+
+        when(stationService.findById(1L)).thenReturn(station);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/stations/1")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.stationName").value(STATION_NAME));
+    }
+
+    @Test
+    @DisplayName("FindById - Station not found")
+    void shouldNotFindStation() throws Exception {
+
+        when(stationService.findById(1L)).thenReturn(null);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/stations/1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 }
