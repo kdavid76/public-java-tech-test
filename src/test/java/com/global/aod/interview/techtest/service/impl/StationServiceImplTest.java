@@ -13,6 +13,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.reset;
@@ -67,5 +69,18 @@ class StationServiceImplTest {
 
         var response = impl.createStation(station);
         assertThat(response).isNotNull().isEqualTo(responseStation);
+    }
+
+    @Test
+    @DisplayName("findAllStations - Getting all stations")
+    void shouldReturnAllStations() {
+        var station = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
+        var stationEntity = new StationEntity(1L, STATION_NAME, 0);
+
+        when(mockRepository.findAll()).thenReturn(List.of(stationEntity, stationEntity, stationEntity));
+        when(mockMapper.toDto(stationEntity)).thenReturn(station);
+
+        var response = impl.findAllStations();
+        assertThat(response).isNotNull().hasSize(3);
     }
 }

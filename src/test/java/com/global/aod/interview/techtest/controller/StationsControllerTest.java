@@ -13,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.List;
+
 import static com.global.aod.interview.techtest.utils.JsonUtils.asJsonString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.reset;
@@ -70,5 +72,32 @@ class StationsControllerTest {
                 .andExpect(header().string("Location", "http://localhost/stations/1"))
                 .andExpect(jsonPath("$.id").value("1"))
                 .andExpect(jsonPath("$.stationName").value(STATION_NAME));
+    }
+
+    @Test
+    @DisplayName("FindAllStations - Reply with a list of stations")
+    void shouldReturnAListOfStations() throws Exception {
+        var station = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
+
+        when(stationService.findAllStations()).thenReturn(List.of(station, station, station));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/stations")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+    }
+
+    @Test
+    @DisplayName("FindAllStations - Reply empty list when no stations pesisted")
+    void shouldReturnEmptyListOfStations() throws Exception {
+
+        when(stationService.findAllStations()).thenReturn(List.of());
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/stations")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }

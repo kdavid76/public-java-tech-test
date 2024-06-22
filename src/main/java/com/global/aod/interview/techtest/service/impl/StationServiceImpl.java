@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -37,5 +39,11 @@ public class StationServiceImpl implements StationService {
             log.error("Unexpected error while persisting Station to database.", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "", e);
         }
+    }
+
+    @Override
+    public List<Station> findAllStations() {
+        log.info("Getting all Stations...");
+        return repository.findAll().stream().map(mapper::toDto).toList();
     }
 }
