@@ -127,7 +127,7 @@ class StationServiceImplTest {
         var stationEntity = new StationEntity(1L, STATION_NAME, 0);
 
         when(mockMapper.toEntity(station)).thenReturn(stationEntity);
-        when(mockRepository.save(stationEntity)).thenThrow(new OptimisticLockingFailureException("There is trouble here!"));
+        when(mockRepository.saveAndFlush(stationEntity)).thenThrow(new OptimisticLockingFailureException("There is trouble here!"));
 
         assertThatThrownBy(() -> impl.updateStation(station))
                 .isInstanceOf(ResponseStatusException.class)
@@ -141,11 +141,12 @@ class StationServiceImplTest {
     void shouldSuccessfullyUpdateStation() {
         var station = Station.builder().stationName(STATION_NAME).build();
         var stationEntity = new StationEntity(1L, STATION_NAME, 0);
-        var responseStation = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
+        var updatedStationEntity = new StationEntity(1L, STATION_NAME, 1);
+        var responseStation = Station.builder().stationName(STATION_NAME).id(1L).version(1).build();
 
         when(mockMapper.toEntity(station)).thenReturn(stationEntity);
-        when(mockRepository.save(stationEntity)).thenReturn(stationEntity);
-        when(mockMapper.toDto(stationEntity)).thenReturn(responseStation);
+        when(mockRepository.saveAndFlush(stationEntity)).thenReturn(updatedStationEntity);
+        when(mockMapper.toDto(updatedStationEntity)).thenReturn(responseStation);
 
         var response = impl.updateStation(station);
         assertThat(response).isNotNull().isEqualTo(responseStation);
