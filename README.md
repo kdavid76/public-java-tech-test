@@ -43,6 +43,46 @@ the top of that, there are a two integration test cases. The first one tests the
 amending resources with checking for erroneous scenarios as well. The second one demonstrates, how the optimistic
 locking feature works.
 
+### Health indicator
+
+This application uses the `/actuator/health` endpoint for checking the health status of the system. The main component
+is the database, and the Spring Boot initiates the health checking for us. By calling the mentioned endpoint, the
+response will be something similar:
+
+```
+{
+    "status": "UP",
+    "components": {
+        "db": {
+            "status": "UP",
+            "details": {
+                "database": "PostgreSQL",
+                "validationQuery": "isValid()"
+            }
+        },
+        "diskSpace": {
+            "status": "UP",
+            "details": {
+                "total": 494384795648,
+                "free": 233683619840,
+                "threshold": 10485760,
+                "path": "/Users/davidkrisztian/git/public-java-tech-test/.",
+                "exists": true
+            }
+        },
+        "ping": {
+            "status": "UP"
+        }
+    }
+}
+```
+
+Which shows the most important part, the health status of the database.
+
+### API Documentation
+
+API documentation is generated automatically. It is available at `/swagger-ui.html`
+
 ### API description
 
 #### Creating station
