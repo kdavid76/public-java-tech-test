@@ -1,7 +1,13 @@
 package com.global.aod.interview.techtest.contoller;
 
+import com.global.aod.interview.techtest.annotations.CreateStation;
+import com.global.aod.interview.techtest.annotations.DeleteStation;
+import com.global.aod.interview.techtest.annotations.GetAllStations;
+import com.global.aod.interview.techtest.annotations.GetStation;
+import com.global.aod.interview.techtest.annotations.UpdateStation;
 import com.global.aod.interview.techtest.model.Station;
 import com.global.aod.interview.techtest.service.StationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +30,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+@Tag(name = "Stations", description = "Station management APIs")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/stations")
@@ -32,6 +39,7 @@ public class StationsController {
     private static final Logger log = LoggerFactory.getLogger(StationsController.class);
     private final StationService stationService;
 
+    @CreateStation
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Station> crateStation(@Valid @RequestBody Station station, BindingResult bindingResult) {
 
@@ -52,6 +60,7 @@ public class StationsController {
         return ResponseEntity.created(location).body(response);
     }
 
+    @GetAllStations
     @GetMapping("")
     public ResponseEntity<List<Station>> findAllStations() {
         var listOfStations = stationService.findAllStations();
@@ -63,6 +72,7 @@ public class StationsController {
         return ResponseEntity.ok(listOfStations);
     }
 
+    @GetStation
     @GetMapping("/{id}")
     public ResponseEntity<Station> findById(@Nonnull @PathVariable Long id) {
         var station = stationService.findById(id);
@@ -74,6 +84,7 @@ public class StationsController {
         return ResponseEntity.ok(station);
     }
 
+    @UpdateStation
     @PutMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Station> updateStation(@Valid @RequestBody Station station, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -88,6 +99,7 @@ public class StationsController {
         return ResponseEntity.ok(response);
     }
 
+    @DeleteStation
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStation(@PathVariable Long id) {
         stationService.deleteStation(id);

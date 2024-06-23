@@ -43,7 +43,9 @@ the top of that, there are a two integration test cases. The first one tests the
 amending resources with checking for erroneous scenarios as well. The second one demonstrates, how the optimistic
 locking feature works.
 
-### Creating station
+### API description
+
+#### Creating station
 
 Stations can be created by sending a `POST` request to the URI: `/stations` with a `JSON` payload containing the name of
 the station. Example:
@@ -79,7 +81,7 @@ not part of the requirements of this task, so I don't implement anything just no
 us, when we are thinking about the security of our services. As per this is a Spring Boot based application, Spring
 Security is kind of a natural choice for authorisation.
 
-### Retrieving the list of all stations
+#### Retrieving the list of all stations
 
 The list of all stations can be retrieved by sending a `GET` request to the URI: `/stations`. The successful response
 will look like this, and will have http status `OK(200)`:
@@ -109,7 +111,7 @@ When the background service fails, then `INTERNAL_SERVER_ERROR(500)` will be ret
 If you call this endpoint before any station data is persisted, then the response still will be `OK(200)`
 and the payload will be empty.
 
-### Retrieving data for a selected station
+#### Retrieving data for a selected station
 
 The data of a selected station can be retrieved by sending a `GET` request to `/stations/{id}` where the `{id}` part is
 the identifier of the station. If it can be found then it will be returned alongside an http `OK(200)` response in this
@@ -124,9 +126,10 @@ format:
 ```
 
 If the background service fails http `INTERNAL_SERVER_ERROR(500)` will be returned. The station identifier is a `Long`.
-If you try it with something what is not a number, then http status `BAD_REQUEST(400)` will be the result.
+If you try it with something what is not a number, then http status `BAD_REQUEST(400)` will be the result. When the
+Station can't be found, the response will be `NOT_FOUND(404)`
 
-### Modify station data
+#### Modify station data
 
 Amending station data is very similar to creating new stations. A `PUT` request needs to be sent to `/stations`
 endpoint with the payload of
@@ -155,8 +158,9 @@ Which shows that the attribute version is incremented by the framework automatic
 parameters of a radio station aren't changing really frequently. But when they are
 changing we need to make sure only one client can write it at the same time. For demonstrating this, a very simple
 optimistic locking scenario is implemented. And that's why I have added the `version` column to the database.
+In this unlikely scenario the response will be http status `CONFLICT(409)`
 
-### Delete a selected station
+#### Delete a selected station
 
 A selected station can be deleted by sending a `DELETE` request to `/stations/{id}` where the `{id}` part is
 the identifier of the station. If the backend service finishes in an exceptional scenario, the response will
