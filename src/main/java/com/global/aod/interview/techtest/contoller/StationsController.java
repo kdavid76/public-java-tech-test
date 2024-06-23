@@ -5,6 +5,7 @@ import com.global.aod.interview.techtest.annotations.DeleteStation;
 import com.global.aod.interview.techtest.annotations.GetAllStations;
 import com.global.aod.interview.techtest.annotations.GetStation;
 import com.global.aod.interview.techtest.annotations.UpdateStation;
+import com.global.aod.interview.techtest.model.Fields;
 import com.global.aod.interview.techtest.model.Station;
 import com.global.aod.interview.techtest.service.StationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -62,8 +65,11 @@ public class StationsController {
 
     @GetAllStations
     @GetMapping("")
-    public ResponseEntity<List<Station>> findAllStations() {
-        var listOfStations = stationService.findAllStations();
+    public ResponseEntity<List<Station>> findAllStations(
+            @RequestParam(name = "orderby", required = false) Fields field,
+            @RequestParam(name = "direction", required = false) Sort.Direction direction) {
+
+        var listOfStations = stationService.findAllStations(field, direction);
 
         if (CollectionUtils.isEmpty(listOfStations)) {
             return ResponseEntity.noContent().build();

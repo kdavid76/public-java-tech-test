@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -43,24 +45,6 @@ class StationServiceImplTest {
         reset(mockMapper, mockRepository);
     }
 
-    /*
-    @Test
-    @DisplayName("createStation - Throw ResponseStatusException when cannot save station")
-    void shouldThrowExceptionWhenPersistingFails() {
-        var station = Station.builder().stationName(STATION_NAME).build();
-        var stationEntity = new StationEntity(1L, STATION_NAME, 0);
-
-        when(mockMapper.toEntity(station)).thenReturn(stationEntity);
-        when(mockRepository.save(stationEntity)).thenThrow(new IllegalArgumentException("There is trouble here!"));
-
-        assertThatThrownBy(() -> impl.createStation(station))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasCauseInstanceOf(IllegalArgumentException.class);
-
-        verifyNoMoreInteractions(mockMapper);
-    }
-     */
-
     @Test
     @DisplayName("createStation - Station successfully saved.")
     void shouldSuccessfullySaveStation() {
@@ -82,15 +66,15 @@ class StationServiceImplTest {
         var station = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
         var stationEntity = new StationEntity(1L, STATION_NAME, 0);
 
-        when(mockRepository.findAll()).thenReturn(List.of(stationEntity, stationEntity, stationEntity));
+        when(mockRepository.findAll(any(Sort.class))).thenReturn(List.of(stationEntity, stationEntity, stationEntity));
         when(mockMapper.toDto(stationEntity)).thenReturn(station);
 
-        var response = impl.findAllStations();
+        var response = impl.findAllStations(null, null);
         assertThat(response).isNotNull().hasSize(3);
     }
 
     @Test
-    @DisplayName("findById - The station waas found")
+    @DisplayName("findById - The station was found")
     void shouldReturnStation() {
         var station = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
         var stationEntity = new StationEntity(1L, STATION_NAME, 0);
@@ -101,24 +85,6 @@ class StationServiceImplTest {
         var response = impl.findById(1L);
         assertThat(response).isNotNull().isEqualTo(station);
     }
-
-    /*
-    @Test
-    @DisplayName("updateStation - Throw ResponseStatusException when cannot save station")
-    void shouldThrowExceptionWhenUpdateFails() {
-        var station = Station.builder().stationName(STATION_NAME).build();
-        var stationEntity = new StationEntity(1L, STATION_NAME, 0);
-
-        when(mockMapper.toEntity(station)).thenReturn(stationEntity);
-        when(mockRepository.save(stationEntity)).thenThrow(new IllegalArgumentException("There is trouble here!"));
-
-        assertThatThrownBy(() -> impl.updateStation(station))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasCauseInstanceOf(IllegalArgumentException.class);
-
-        verifyNoMoreInteractions(mockMapper);
-    }
-     */
 
     @Test
     @DisplayName("updateStation - Optimistic locking failure when cannot save station")

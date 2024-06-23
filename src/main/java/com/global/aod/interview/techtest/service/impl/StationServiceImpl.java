@@ -1,12 +1,14 @@
 package com.global.aod.interview.techtest.service.impl;
 
 import com.global.aod.interview.techtest.mapper.StationMapper;
+import com.global.aod.interview.techtest.model.Fields;
 import com.global.aod.interview.techtest.model.Station;
 import com.global.aod.interview.techtest.repository.StationRepository;
 import com.global.aod.interview.techtest.service.StationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,9 +40,13 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
-    public List<Station> findAllStations() {
+    public List<Station> findAllStations(Fields field, Sort.Direction direction) {
         log.info("Getting all Stations...");
-        return repository.findAll().stream().map(mapper::toDto).toList();
+        return repository.findAll(
+                Sort.by(direction != null ? direction : Sort.Direction.ASC,
+                        field != null ? field.getField() : Fields.ID.getField())
+        ).stream().map(mapper::toDto).toList();
+
     }
 
     @Override

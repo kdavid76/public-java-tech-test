@@ -79,7 +79,7 @@ class StationsControllerTest {
     void shouldReturnAListOfStations() throws Exception {
         var station = Station.builder().stationName(STATION_NAME).id(1L).version(0).build();
 
-        when(stationService.findAllStations()).thenReturn(List.of(station, station, station));
+        when(stationService.findAllStations(null, null)).thenReturn(List.of(station, station, station));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/stations")
@@ -92,7 +92,7 @@ class StationsControllerTest {
     @DisplayName("FindAllStations - No content when no stations has been persisted")
     void shouldReturnEmptyListOfStations() throws Exception {
 
-        when(stationService.findAllStations()).thenReturn(List.of());
+        when(stationService.findAllStations(null, null)).thenReturn(List.of());
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/stations")
