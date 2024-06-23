@@ -62,7 +62,7 @@ public class StationServiceImpl implements StationService {
         var entity = mapper.toEntity(station);
 
         try {
-            var responseEntity = repository.save(entity);
+            var responseEntity = repository.saveAndFlush(entity);
             return mapper.toDto(responseEntity);
         } catch (OptimisticLockingFailureException e) {
             log.error("Version mismatch while updating station.", e);

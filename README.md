@@ -36,6 +36,13 @@ custom response objects, we always have to use the response structure defined by
 As an improvement to the system we may be want to upgrade this and use some more sophisticated approach for sending
 customised success and failure information to API clients.
 
+### Testing
+
+Meaningful unit test cases has been added added to the code. They test all the scenarios what can happen in the code. On
+the top of that, there are a two integration test cases. The first one tests the whole flow, of creating, reading and
+amending resources with checking for erroneous scenarios as well. The second one demonstrates, how the optimistic
+locking feature works.
+
 ### Creating station
 
 Stations can be created by sending a `POST` request to the URI: `/stations` with a `JSON` payload containing the name of
