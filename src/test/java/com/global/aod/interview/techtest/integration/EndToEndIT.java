@@ -1,7 +1,6 @@
 package com.global.aod.interview.techtest.integration;
 
 import com.global.aod.interview.techtest.model.Station;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +12,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,27 +22,24 @@ import java.util.Objects;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class EndToEndIT {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@ActiveProfiles("test")
+class EndToEndIT {
 
     @LocalServerPort
     private int port;
 
+    private final RestTemplate restTemplate = new RestTemplate();
     private String baseUrl = "http://localhost";
 
 
-    private static RestTemplate restTemplate = null;
-
-    @BeforeAll
-    public static void init() {
-        restTemplate = new RestTemplate();
-    }
-
     @BeforeEach
     public void setUp() {
+
         baseUrl = baseUrl.concat(":").concat(port + "").concat("/stations");
     }
 
+    @Sql(scripts = "/db/reset-database.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     @DisplayName("End to end test with creating, retrieving, amending and deleting station data")
     void shouldWorkEndToEnd() {
@@ -50,26 +48,7 @@ public class EndToEndIT {
         assertThat(stationListResponse.getStatusCode()).isNotNull().isEqualTo(HttpStatus.NO_CONTENT);
 
         // STEP 2: Register a few stations
-        var station1 = Station.builder().stationName("Heart UK").build();
-        var station2 = Station.builder().stationName("Capital FM").build();
-        var station3 = Station.builder().stationName("Radio X").build();
-        var station4 = Station.builder().stationName("Kiss").build();
-
-        var stationResponse = restTemplate.postForEntity(baseUrl, station1, Station.class);
-        assertStatusCode(stationResponse, HttpStatus.CREATED);
-        assertStation(stationResponse.getBody(), 1L, station1.stationName(), 0);
-
-        stationResponse = restTemplate.postForEntity(baseUrl, station2, Station.class);
-        assertStatusCode(stationResponse, HttpStatus.CREATED);
-        assertStation(stationResponse.getBody(), 2L, station2.stationName(), 0);
-
-        stationResponse = restTemplate.postForEntity(baseUrl, station3, Station.class);
-        assertStatusCode(stationResponse, HttpStatus.CREATED);
-        assertStation(stationResponse.getBody(), 3L, station3.stationName(), 0);
-
-        stationResponse = restTemplate.postForEntity(baseUrl, station4, Station.class);
-        assertStatusCode(stationResponse, HttpStatus.CREATED);
-        assertStation(stationResponse.getBody(), 4L, station4.stationName(), 0);
+        addAndCheckFourStations(baseUrl);
 
         // STEP 3: Retrieve the list of stations for checking the number of available ones
         stationListResponse = restTemplate.getForEntity(baseUrl, Station[].class);
@@ -79,7 +58,7 @@ public class EndToEndIT {
         // STEP 4: Get only one selected Station
         var singleStationResponse = restTemplate.getForEntity(baseUrl.concat("/2"), Station.class);
         assertStatusCode(singleStationResponse, HttpStatus.OK);
-        assertStation(singleStationResponse.getBody(), 2L, station2.stationName(), 0);
+        assertStation(singleStationResponse.getBody(), 2L, "Capital FM", 0);
 
         // STEP 5: Amend a station
         var stationToAmend = Station.builder()
@@ -105,10 +84,9 @@ public class EndToEndIT {
         stationListResponse = restTemplate.getForEntity(baseUrl, Station[].class);
         assertStatusCode(stationListResponse, HttpStatus.OK);
         assertThat(stationListResponse.getBody()).isNotNull().hasSize(3);
-
-
     }
 
+    @Sql(scripts = "/db/reset-database.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     @DisplayName("Optimistic locking exception should be thrown when concurrent modifications")
     void shouldThrowOptimisticLockingException() {
@@ -148,21 +126,87 @@ public class EndToEndIT {
         }
     }
 
+    @Sql(scripts = "/db/reset-database.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Test
+    @DisplayName("Testing ordering of findAllStations call")
+    void shouldOrderByTheGivenParameters() {
+        // STEP 1: Add stations
+        addAndCheckFourStations(baseUrl);
+
+        // STEP 2: Retrieve the list of stations orderby=nAMe, direction default (ASC)
+        var stationListResponse = restTemplate.getForEntity(baseUrl + "?orderby=nAMe", Station[].class);
+        assertStatusCode(stationListResponse, HttpStatus.OK);
+        var body = stationListResponse.getBody();
+        assertThat(body).isNotNull();
+        assertStationArrayOrderByName(body, "Capital FM", "Heart UK", "Kiss", "Radio X");
+
+        // STEP 3: Retrieve the list of stations orderby=id, direction default (ASC)
+        stationListResponse = restTemplate.getForEntity(baseUrl + "?orderby=id", Station[].class);
+        assertStatusCode(stationListResponse, HttpStatus.OK);
+        body = stationListResponse.getBody();
+        assertThat(body).isNotNull();
+        assertStationArrayOrderByName(body, "Heart UK", "Capital FM", "Radio X", "Kiss");
+
+        // STEP 4: Retrieve the list of stations orderby=nAMe, direction=DESC
+        stationListResponse = restTemplate.getForEntity(baseUrl + "?orderby=nAMe&direction=desc", Station[].class);
+        assertStatusCode(stationListResponse, HttpStatus.OK);
+        body = stationListResponse.getBody();
+        assertThat(body).isNotNull();
+        assertStationArrayOrderByName(body, "Radio X", "Kiss", "Heart UK", "Capital FM");
+
+        // STEP 5: Retrieve the list of stations orderby=id, direction=desc
+        stationListResponse = restTemplate.getForEntity(baseUrl + "?orderby=id&direction=desc", Station[].class);
+        assertStatusCode(stationListResponse, HttpStatus.OK);
+        body = stationListResponse.getBody();
+        assertThat(body).isNotNull();
+        assertStationArrayOrderByName(body, "Kiss", "Radio X", "Capital FM", "Heart UK");
+    }
+
     private HttpEntity<Station> buildHttpEntity(Station station) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
         return new HttpEntity<>(station, headers);
     }
 
-    private void assertStatusCode(ResponseEntity<? extends Object> response, HttpStatus status) {
+    private void assertStationArrayOrderByName(Station[] stations, String... names) {
+        for (int i = 0; i < stations.length; i++) {
+            assertThat(stations[i]).isNotNull();
+            assertThat(stations[i].stationName()).isEqualTo(names[i]);
+        }
+    }
+
+    protected static void assertStatusCode(ResponseEntity<? extends Object> response, HttpStatus status) {
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(status);
     }
 
-    private void assertStation(Station station, Long id, String name, Integer version) {
+    protected static void assertStation(Station station, Long id, String name, Integer version) {
         assertThat(station).isNotNull();
         assertThat(station.id()).isEqualTo(id);
         assertThat(station.stationName()).isEqualTo(name);
         assertThat(station.version()).isEqualTo(version);
+    }
+
+    private void addAndCheckFourStations(String baseUrl) {
+        var station1 = Station.builder().stationName("Heart UK").build();
+        var station2 = Station.builder().stationName("Capital FM").build();
+        var station3 = Station.builder().stationName("Radio X").build();
+        var station4 = Station.builder().stationName("Kiss").build();
+
+        var stationResponse = restTemplate.postForEntity(baseUrl, station1, Station.class);
+        assertStatusCode(stationResponse, HttpStatus.CREATED);
+        assertStation(stationResponse.getBody(), 1L, station1.stationName(), 0);
+
+        stationResponse = restTemplate.postForEntity(baseUrl, station2, Station.class);
+        assertStatusCode(stationResponse, HttpStatus.CREATED);
+        assertStation(stationResponse.getBody(), 2L, station2.stationName(), 0);
+
+        stationResponse = restTemplate.postForEntity(baseUrl, station3, Station.class);
+        assertStatusCode(stationResponse, HttpStatus.CREATED);
+        assertStation(stationResponse.getBody(), 3L, station3.stationName(), 0);
+
+        stationResponse = restTemplate.postForEntity(baseUrl, station4, Station.class);
+        assertStatusCode(stationResponse, HttpStatus.CREATED);
+        assertStation(stationResponse.getBody(), 4L, station4.stationName(), 0);
     }
 }
